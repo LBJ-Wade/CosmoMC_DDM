@@ -4,6 +4,8 @@
     !     by Antony lewis (http://cosmologist.info) and Anthony Challinor
     !     See readme.html for documentation.
 
+!MODIFIED July 2018 for dark radiation
+
     !     Note that though the code is internally parallelised, it is not thread-safe
     !     so you cannot generate more than one model at the same time in different threads.
     !
@@ -651,6 +653,9 @@
         taustart=min(taustart,1.d-3/maxval(nu_masses(1:CP%Nu_mass_eigenstates))/adotrad)
     end if
 
+!MODIFIED
+    taustart=taustart/100.0 !add this line
+!!!!!!!
     GetTauStart=taustart
     end function GetTauStart
 
@@ -660,7 +665,7 @@
     type(EvolutionVars) EV
 
     EV%q=Evolve_q%points(q_ix)
-    
+
     if (fixq/=0._dl) then
         EV%q= min(500._dl,fixq) !for testing
     end if

@@ -2,6 +2,7 @@
     !     by Antony Lewis (http://cosmologist.info/) and Anthony Challinor
     !     See readme.html for documentation. This is a sample driver routine that reads
     !     in one set of parameters and produdes the corresponding output.
+!MODIFIED July 2018 for DDM and dark radiation
 
     program driver
     use IniFile
@@ -104,11 +105,18 @@
 
     P%h0     = Ini_Read_Double('hubble')
 
+!MODIFIED: include alpha
+    P%alpha_phdm  = Ini_Read_Double('alpha_phdm')
+
     if (Ini_Read_Logical('use_physical',.false.)) then
         P%omegab = Ini_Read_Double('ombh2')/(P%H0/100)**2
         P%omegac = Ini_Read_Double('omch2')/(P%H0/100)**2
         P%omegan = Ini_Read_Double('omnuh2')/(P%H0/100)**2
-        P%omegav = 1- Ini_Read_Double('omk') - P%omegab-P%omegac - P%omegan
+!MODIFIED
+        P%omegas = P%omegac*P%alpha_phdm !ADDED
+        !P%omegav = 1- Ini_Read_Double('omk') - P%omegab-P%omegac - P%omegan !COMMENTED OUT
+        P%omegav = 1- Ini_Read_Double('omk') - P%omegab-P%omegac - P%omegan -P%omegas !CHANGED
+!!!!!!!!!
     else
         P%omegab = Ini_Read_Double('omega_baryon')
         P%omegac = Ini_Read_Double('omega_cdm')

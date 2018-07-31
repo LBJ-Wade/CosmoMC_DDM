@@ -22,7 +22,7 @@
     !     portions of this software are based on the COSMICS package of
     !     E. Bertschinger.  See the LICENSE file of the COSMICS distribution
     !     for restrictions on the modification and distribution of this software.
-
+!MODIFIED JULY 2018 for DDM and dark radiation
 
     module ModelParams
     use precision
@@ -61,7 +61,8 @@
     !Nu_best: automatically use mixture which is fastest and most accurate
 
     integer, parameter :: max_Nu = 5 !Maximum number of neutrino species
-    integer, parameter :: max_transfer_redshifts = 150
+!MODIFIED: change from 150 to 500
+    integer, parameter :: max_transfer_redshifts = 500 !150 !CHANGED
     integer, parameter :: fileio_unit = 13 !Any number not used elsewhere will do
     integer, parameter :: outNone=1
 
@@ -75,7 +76,7 @@
 
     type TransferParams
         logical     ::  high_precision
-        logical     ::  accurate_massive_neutrinos 
+        logical     ::  accurate_massive_neutrinos
         integer     ::  num_redshifts
         real(dl)    ::  kmax         !these are acutally q values, but same as k for flat
         integer     ::  k_per_logint ! ..
@@ -112,6 +113,8 @@
         !Max_l and Max_eta_k are set to the tensor variables if only tensors requested
 
         real(dl)  :: omegab, omegac, omegav, omegan
+!MODIFIED: add parameters
+        real(dl)  :: omegas, alpha_phdm !ADDED
         !Omega baryon, CDM, Lambda and massive neutrino
         real(dl)  :: H0,TCMB,yhe,Num_Nu_massless
         integer   :: Num_Nu_massive !sum of Nu_mass_numbers below
@@ -176,6 +179,8 @@
     !     adotrad - a(tau) in radiation era
 
     real(dl) grhom,grhog,grhor,grhob,grhoc,grhov,grhornomass,grhok
+!MODIFIED: add parameters
+    real(dl) grhos,io_phdm !ADDED
     real(dl) taurst,dtaurec,taurend, tau_maxvis,adotrad
 
     !Neutrinos
@@ -378,9 +383,14 @@
     grhob=grhom*CP%omegab
     grhov=grhom*CP%omegav
     grhok=grhom*CP%omegak
-    !  adotrad gives the relation a(tau) in the radiation era:
-    adotrad = sqrt((grhog+grhornomass+sum(grhormass(1:CP%Nu_mass_eigenstates)))/3)
+!MODIFIED
+    grhos=grhom*CP%omegas !ADDED
+    io_phdm=(3._dl+4._dl*CP%alpha_phdm)/(1._dl+CP%alpha_phdm) !ADDED
 
+    !  adotrad gives the relation a(tau) in the radiation era:
+    !adotrad = sqrt((grhog+grhornomass+sum(grhormass(1:CP%Nu_mass_eigenstates)))/3) !Commented out
+    adotrad = sqrt((grhos+grhog+grhornomass+sum(grhormass(1:CP%Nu_mass_eigenstates)))/3) !CHANGED
+!!!!!!!!!!!!!!
 
     Nnow = CP%omegab*(1-CP%yhe)*grhom*c**2/kappa/m_H/Mpc**2
 
@@ -427,6 +437,8 @@
         write(*,'("Om_nu h^2            = ",f9.6)') CP%omegan*(CP%H0/100)**2
         write(*,'("Om_Lambda            = ",f9.6)') CP%omegav
         write(*,'("Om_K                 = ",f9.6)') CP%omegak
+        write(*,'("Dark radiation       = ",f9.6)') CP%omegas !MODIFIED: line ADDED
+        write(*,'("alpha                = ",f9.6)') CP%alpha_phdm !MODIFIED: line ADDED
         write(*,'("Om_m (1-Om_K-Om_L)   = ",f9.6)') 1-CP%omegak-CP%omegav
         write(*,'("100 theta (CosmoMC)  = ",f9.6)') 100*CosmomcTheta()
         if (CP%Num_Nu_Massive > 0) then
@@ -1770,18 +1782,23 @@
     use Errors
     implicit none
     public
+!MODIFIED
     integer, parameter :: Transfer_kh =1, Transfer_cdm=2,Transfer_b=3,Transfer_g=4, &
         Transfer_r=5, Transfer_nu = 6,  & !massless and massive neutrino
     Transfer_tot=7, Transfer_nonu=8, Transfer_tot_de=9,  &
         ! total perturbations with and without neutrinos, with neutrinos+dark energy in the numerator
         Transfer_Weyl = 10, & ! the Weyl potential, for lensing and ISW
     Transfer_Newt_vel_cdm=11, Transfer_Newt_vel_baryon=12,   & ! -k v_Newtonian/H
-    Transfer_vel_baryon_cdm = 13 !relative velocity of baryons and CDM
+    Transfer_vel_baryon_cdm = 13, & !relative velocity of baryons and CDM
+    Transfer_s = 14 !ADDED
 
-    integer, parameter :: Transfer_max = Transfer_vel_baryon_cdm
+    !integer, parameter :: Transfer_max = Transfer_vel_baryon_cdm !Commented out
+    integer, parameter :: Transfer_max = Transfer_s !CHANGED
+
     character(LEN=name_tag_len) :: Transfer_name_tags(Transfer_max-1) = &
         ['CDM     ', 'baryon  ', 'photon  ', 'nu      ', 'mass_nu ', 'total   ', &
-        'no_nu   ', 'total_de', 'Weyl    ', 'v_CDM   ', 'v_b     ', 'v_b-v_c ']
+        'no_nu   ', 'total_de', 'Weyl    ', 'v_CDM   ', 'v_b     ', 'v_b-v_c ', 'phdm    '] !ADDED phdm
+!!!!!!!!!!
 
     logical :: transfer_interp_matterpower  = .true. !output regular grid in log k
     !set to false to output calculated values for later interpolation
@@ -2663,7 +2680,7 @@
         end if
     end if
     end subroutine thermo
-    
+
     function Thermo_OpacityToTime(opacity)
     real(dl), intent(in) :: opacity
     integer j
@@ -3194,7 +3211,7 @@
     call splini(spline_data,nthermo)
     call splder(xe,ddxe,nthermo,spline_data)
     call splder(Tb,ddTb,nthermo,spline_data)
-    
+
     outputs = 0
     do ix = 1, ntimes
         tau = times(ix)
@@ -3223,7 +3240,7 @@
         outputs(2, ix) = opacity
         outputs(3, ix) = opacity*vis
         outputs(4, ix) = cs2b
-        outputs(5, ix) = Tbaryon        
+        outputs(5, ix) = Tbaryon
     end do
 
     end subroutine GetBackgroundEvolution

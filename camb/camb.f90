@@ -1,4 +1,5 @@
     !Interface module for CAMB. Call CAMB_GetResults to do the work.
+!MODIFIED JULY 2018 for DDM and dark radiation
 
     module CAMB
     use Precision
@@ -130,7 +131,7 @@
         if (separate) then
             P%WantTransfer = .false.
             P%Transfer%high_precision = .false.
-            P%Transfer%accurate_massive_neutrinos = .false.            
+            P%Transfer%accurate_massive_neutrinos = .false.
         end if
         P%WantTensors = .false.
         P%WantVectors = .false.
@@ -143,7 +144,7 @@
         call_again = .true.
         !Need to store CP%flat etc, but must keep original P_k settings
         CP%Transfer%high_precision = Params%Transfer%high_precision
-        CP%Transfer%accurate_massive_neutrinos = Params%Transfer%accurate_massive_neutrinos        
+        CP%Transfer%accurate_massive_neutrinos = Params%Transfer%accurate_massive_neutrinos
         CP%WantTransfer = Params%WantTransfer
         CP%WantTensors = Params%WantTensors
         CP%WantVectors = Params%WantVectors
@@ -310,6 +311,9 @@
     P%WantTransfer= .false.
     P%WantCls = .true.
 
+!MODIFIED: add DDM parameter
+    P%alpha_phdm = 0.d0
+!!!!!!
     P%omegab  = .045
     P%omegac  = 0.255
     P%omegav  = 0.7
