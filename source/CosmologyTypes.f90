@@ -1,3 +1,5 @@
+!MODIFIED August 2018 for DDM and dark radiation
+
     module CosmologyTypes
     use settings
     use likelihood
@@ -12,7 +14,9 @@
     integer, parameter :: As_index=1, ns_index =2, nrun_index=3, nrunrun_index=4, amp_ratio_index = 5, &
         & nt_index= 6, ntrun_index = 7, Aphiphi_index = 8, last_power_index = Aphiphi_index
 
-    integer, parameter :: max_inipower_params = 10
+!MODIFIED
+    integer, parameter :: max_inipower_params = 11 !10+1 additional parameter
+!!!!!!!
 
     real(mcp), parameter :: cl_norm = 1e-10_mcp !units for As
     integer, parameter :: max_derived_parameters = 30
@@ -34,7 +38,8 @@
 
         !l_max. Tensors are not computed unless compute_tensors = T in input file
         !Make these multiples of 50, should be 50 more than you need accurately
-        integer :: lmax = 0
+!MODIFIED
+        integer :: lmax = 4100 !changed from 0 to 4100
         integer :: num_cls = 0
         integer :: lmax_tensor = 600
         !note only lmax_computed_cl is actually calculated
@@ -106,20 +111,24 @@
     procedure :: InitForSettings => TCosmologyRequirementsLikelihood_InitForSettings
     end type TCosmologyRequirementsLikelihood
 
+!MODIFIED: add parameter
     Type, extends(TTheoryParams) :: CMBParams
         real(mcp) InitPower(max_inipower_params)
         !These are fast parameters for the initial power spectrum
         !Now remaining (non-independent) parameters
         real(mcp) omb, omc, omv, omnu, omk, omdm
         real(mcp) ombh2, omch2, omnuh2, omdmh2
+        real(mcp) oms, omsh2 !ADD this line
         real(mcp) zre, zre_delta, nufrac
         real(mcp) h, H0, tau
         real(mcp) w, wa
+        real(mcp) alpha_phdm !ADDED
         real(mcp) YHe, nnu, iso_cdm_correlated, ALens, Alensf, fdm !fdm is dark matter annihilation, eg,. 0910.3663
         real(mcp) :: omnuh2_sterile = 0._mcp  !note omnhu2 is the sum of this + standard neutrinos
         real(mcp) :: sum_mnu_standard
         real(mcp) reserved(5)
     end Type CMBParams
+!!!!!!!!!
 
     Type, extends(TParameterization) :: TCosmologyParameterization
         logical :: late_time_only = .false.

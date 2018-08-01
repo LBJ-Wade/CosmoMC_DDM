@@ -1,3 +1,5 @@
+!MODIFIED August 2018 for DDM and dark radiation
+
     !Use CAMB
     module Calculator_CAMB
     use CosmologyTypes
@@ -87,16 +89,20 @@
     real(dl) neff_massive_standard, mnu, m1, m3, normal_frac
     real(dl), external :: Newton_raphson
 
+!MODIFIED
     P = this%CAMBP
     P%omegab = CMB%omb
     P%omegan = CMB%omnu
     P%omegac = CMB%omc
+    P%omegas = CMB%oms !ADDED
     P%omegav = CMB%omv
+    P%alpha_phdm = CMB%alpha_phdm !ADDED
+!!!!!!!!!!!!!
     P%H0 = CMB%H0
     P%Reion%redshift= CMB%zre
     P%Reion%delta_redshift = CMB%zre_delta
     w_lam = CMB%w
-    wa_ppf = CMB%wa
+!    wa_ppf = CMB%wa !MODIFIED: comment out
     ALens = CMB%ALens
     ALens_Fiducial = CMB%ALensf
     P%InitialConditionVector(initial_iso_CDM) = &
@@ -673,7 +679,7 @@
     integer, intent(in) :: n
     real(mcp), intent(IN) :: z(n)
     real(mcp), intent(out) :: arr(n)
-    !Note redshifts must be monotonically increasing    
+    !Note redshifts must be monotonically increasing
 
     call ComovingRadialDistanceArr(arr, z, n, 1d-4)
 
@@ -718,7 +724,7 @@
     !for nonlinear lensing of CMB + LSS compatibility
     Threadnum =num_threads
     w_lam = -1
-    wa_ppf = 0._dl
+!    wa_ppf = 0._dl !MODIFIED: comment out
     call CAMB_SetDefParams(P)
 
     HighAccuracyDefault = .true.

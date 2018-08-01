@@ -8,6 +8,8 @@
     !
     !Also a background (late-time) parameterization, e.g. for use with just supernoave etc
 
+!MODIFIED August 2018 for DDM and dark radiation
+
     module CosmologyParameterizations
     use CosmologyTypes
     use CosmoTheory
@@ -83,7 +85,9 @@
     call Names%AddDerivedRange('H0', this%H0_min, this%H0_max)
     this%num_derived = Names%num_derived
     !set number of hard parameters, number of initial power spectrum parameters
-    call this%SetTheoryParameterNumbers(16,last_power_index)
+!MODIFIED
+    call this%SetTheoryParameterNumbers(17,last_power_index) !Increase from 16 to 17
+!!!!!!!
 
     end subroutine TP_Init
 
@@ -296,6 +300,9 @@
         CMB%Omk = Params(5)
         CMB%w = Params(8)
         CMB%wa = Params(9)
+!MODIFIED
+        CMB%alpha_phdm = Params(17) !ADD parameter
+!!!!!!!!
         CMB%nnu = Params(10) !3.046
         !Params(6) is now mnu, where mnu is physical standard neutrino mass and we assume standard heating
         CMB%sum_mnu_standard = Params(6)
@@ -312,10 +319,16 @@
             end if
         end if
 
-        CMB%omnuh2 = CMB%omnuh2 + CMB%omnuh2_sterile
+!MODIFIED
+        !CMB%omnuh2 = CMB%omnuh2 + CMB%omnuh2_sterile !Commented out this line
+        CMB%omnuh2 = 0.0 !CHANGED
+!!!!!!!!!!
         CMB%omch2 = Params(2)
         CMB%omdmh2 = CMB%omch2+ CMB%omnuh2
         CMB%nufrac=CMB%omnuh2/CMB%omdmh2
+!MODIFIED: add this?
+        CMB%omsh2 = CMB%alpha_phdm * CMB%omch2 !ADDED
+!!!!!!!!!
 
         if (CosmoSettings%bbn_consistency) then
             CMB%YHe = BBN_YHe%Value(CMB%ombh2,CMB%nnu - standard_neutrino_neff,error)
@@ -332,13 +345,17 @@
         call SetFast(Params,CMB)
     end if
 
+!MODIFIED
     CMB%h = CMB%H0/100
     h2 = CMB%h**2
     CMB%omb = CMB%ombh2/h2
     CMB%omc = CMB%omch2/h2
     CMB%omnu = CMB%omnuh2/h2
     CMB%omdm = CMB%omdmh2/h2
-    CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm
+    CMB%oms = CMB%omsh2/h2 !ADDED
+    !CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm !Commented out
+    CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm - CMB%oms !include oms
+!!!!!!!!
 
     end subroutine SetForH
 
@@ -370,7 +387,7 @@
         CMB%w =    Params(5)
         CMB%wa =    Params(6)
         CMB%nnu =    Params(7)
-
+!!!!!???SHOULD ALPHA BE ADDED SOMEWHERE  IN THIS SECTION? MODIFIED.....
         CMB%h=CMB%H0/100
         h2 = CMB%h**2
         CMB%Yhe=0.24
@@ -383,7 +400,12 @@
         CMB%tau=0
         CMB%omdmh2 = CMB%omch2+ CMB%omnuh2
         CMB%omdm = CMB%omdmh2/h2
-        CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm
+!MODIFIED
+        CMB%omsh2 = CMB%alpha_phdm * CMB% omch2 !ADDED
+        CMB%oms = CMB%omsh2/h2 !ADDED
+        !CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm !Commented Out
+        CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm - CMB%oms !include oms
+!!!!!!!!!!
         CMB%nufrac=CMB%omnuh2/CMB%omdmh2
         CMB%reserved=0
         CMB%fdm=0
@@ -463,6 +485,9 @@
         CMB%ombh2 = CMB%omb*h2
         CMB%omc= omegam - CMB%omb - CMB%omnu
         CMB%omch2 = CMB%omc*h2
+!MODIFIED: is this needed???????
+        CMB%omsh2 = CMB%alpha_phdm * CMB%omch2 !ADDED
+!!!!!!!
 
         CMB%w =    Params(6)
         CMB%wa =   Params(7)
@@ -482,7 +507,11 @@
         CMB%tau=0
         CMB%omdmh2 = CMB%omch2+ CMB%omnuh2
         CMB%omdm = CMB%omdmh2/h2
-        CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm
+!MODIFIED
+        CMB%oms = CMB%omsh2/h2 !ADDED
+        !CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm !Commented Out
+        CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm - CMB%oms !CHANGED
+!!!!!!!!!!!
         CMB%nufrac=CMB%omnuh2/CMB%omdmh2
         CMB%reserved=0
         CMB%fdm=0
